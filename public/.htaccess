@@ -18,8 +18,22 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+   # Si l'URL contient c=xxx, on redirige vers c/xxx
+   RewriteCond %{REQUEST_URI} ^/api(?:\.php)?/c=([^/]+)(/?.*)$ [NC]
+   RewriteRule ^ /api/c/%1%2 [L,QSA,R=301]
+
+
+   # Redirection legacy ?c=table vers /api/c/table
+   RewriteCond %{QUERY_STRING} ^c=([^&]+)&?id=([^&]+)?$
+   RewriteRule ^api\.php$ /api/c/%1/%2? [R=301,L]
+
+   RewriteCond %{QUERY_STRING} ^c=([^&]+)$
+   RewriteRule ^api\.php$ /api/c/%1? [R=301,L]
+
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+
 </IfModule>
