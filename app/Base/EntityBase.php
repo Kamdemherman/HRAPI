@@ -51,4 +51,33 @@ class EntityBase
             ->where($this->idField, $id)
             ->delete();
     }
+
+//     public function search(array $filters): Collection
+// {
+//     $query = DB::table($this->table);
+
+//     foreach ($filters as $field => $value) {
+//         if (Schema::hasColumn($this->table, $field)) {
+//             $query->where($field, $value);
+//         }
+//     }
+
+//     return $query->get();
+// }
+
+public function search(array $filters = [])
+{
+    $query = DB::table($this->table);
+
+    foreach ($filters as $field => $value) {
+        // Ignore les filtres spéciaux pour éviter doublons
+        if (in_array($field, ['emiters', 'roles'])) {
+            continue;
+        }
+        $query->where($field, $value);
+    }
+
+    return $query->get();
+}
+
 }

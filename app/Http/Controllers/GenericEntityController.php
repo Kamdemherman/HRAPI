@@ -6,44 +6,43 @@ use App\Base\EntityBase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use App\Services\SpecialFilterService;
 
 class GenericEntityController extends Controller
+
 {
     protected EntityBase $entity;
 
-    protected function init(Request $request, string $table)
+
+    protected function init(Request $request, $table, $idField = 'id')
+
     {
-        $idField = $this->guessIdField($table);
+        if (!Schema::hasTable($table)) {
+            abort(404, "La table '$table' n'existe pas.");
+        }
+
         $this->entity = new EntityBase($table, $idField);
     }
 
-    protected function guessIdField(string $table): string
-    {
-        // Essaie de trouver une colonne "ID_" + nom de la table (en majuscules et au singulier)
-        $columns = Schema::getColumnListing($table);
+  
 
-        $baseName = strtoupper(Str::singular($table));
-        $possibleId = 'ID_' . $baseName;
+    public function index(Request $request, $table, $idField = 'id')
+{
+    $this->init($request, $table, $idField);
 
-        // Si la colonne existe, on la retourne
-        if (in_array($possibleId, $columns)) {
-            return $possibleId;
-        }
 
-        // Sinon, on vérifie s’il y a une colonne ID simple
-        if (in_array('id', $columns)) {
-            return 'id';
-        }
-
-        // En dernier recours, on prend la première colonne comme ID
-        return $columns[0] ?? 'id';
+    // $specialResult = SpecialFilterService::handle($table, $request->query());
+    // if ($specialResult !== null) {
+    //     return response()->json($specialResult);
+    // }
+    
+    $specialResult = SpecialFilterService::handle($table, $request->query());
+    if ($specialResult instanceof \Illuminate\Http\JsonResponse) {
+        return $specialResult;
     }
 
-    public function index(Request $request, $table)
-    {
-        $this->init($request, $table);
-        return response()->json($this->entity->all());
-    }
+    return response()->json($this->entity->search($request->query()));
+}
 
     public function store(Request $request, $table)
     {
@@ -72,70 +71,4 @@ class GenericEntityController extends Controller
     }
 }
 
-
-
-
-// namespace App\Http\Controllers;
-
-// use App\Base\EntityBase;
-// use Illuminate\Http\Request;
-// use Illuminate\Support\Str;
-// use Illuminate\Support\Facades\Schema;
-
-// class GenericEntityController extends Controller
-// {
-//     public function index($table)
-//     {
-//         if (!Schema::hasTable($table)) {
-//             return response()->json(['error' => 'Table not found.'], 404);
-//         }
-
-//         $entity = new EntityBase($table);
-//         return response()->json($entity->all());
-//     }
-
-//     public function show($table, $id)
-//     {
-//         if (!Schema::hasTable($table)) {
-//             return response()->json(['error' => 'Table not found.'], 404);
-//         }
-
-//         $entity = new EntityBase($table);
-//         $result = $entity->find($id);
-//         return $result ? response()->json($result) : response()->json(['error' => 'Not found.'], 404);
-//     }
-
-//     public function store(Request $request, $table)
-//     {
-//         if (!Schema::hasTable($table)) {
-//             return response()->json(['error' => 'Table not found.'], 404);
-//         }
-
-//         $entity = new EntityBase($table);
-//         $id = $entity->create($request->all());
-//         return response()->json(['id' => $id], 201);
-//     }
-
-//     public function update(Request $request, $table, $id)
-//     {
-//         if (!Schema::hasTable($table)) {
-//             return response()->json(['error' => 'Table not found.'], 404);
-//         }
-
-//         $entity = new EntityBase($table);
-//         $updated = $entity->update($id, $request->all());
-//         return response()->json($updated);
-//     }
-
-//     public function destroy($table, $id)
-//     {
-//         if (!Schema::hasTable($table)) {
-//             return response()->json(['error' => 'Table not found.'], 404);
-//         }
-
-//         $entity = new EntityBase($table);
-//         $deleted = $entity->delete($id);
-//         return response()->json(['deleted' => $deleted]);
-//     }
-// }
 

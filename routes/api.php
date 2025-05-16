@@ -6,6 +6,8 @@ use App\Http\Controllers\GenericEntityController;
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Middleware\CheckHttpMethod;
+
 // Routes d'authentification
 Route::post('login', [AuthController::class, 'login']);
 Route::post('register', [AuthController::class, 'register']);
@@ -16,7 +18,15 @@ Route::middleware('auth:sanctum')->group(function () {
    });
 
 
-    Route::prefix('c')->group(function () {
+   
+    // Route::get('{table}', [GenericEntityController::class, 'index']);
+    // Route::get('{table}/{id}', [GenericEntityController::class, 'show']);
+    // Route::post('{table}', [GenericEntityController::class, 'store']);
+    // Route::put('{table}/{id}', [GenericEntityController::class, 'update']);
+    // Route::delete('{table}/{id}', [GenericEntityController::class, 'destroy']);
+
+
+Route::prefix('c')-> middleware([CheckHttpMethod::class])->group(function () {
     Route::get('{table}', [GenericEntityController::class, 'index']);
     Route::get('{table}/{id}', [GenericEntityController::class, 'show']);
     Route::post('{table}', [GenericEntityController::class, 'store']);
@@ -26,11 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-// Route::get('/c={table}', [GenericEntityController::class, 'index']);
-// Route::get('/c={table}/{id}', [GenericEntityController::class, 'show']);
-// Route::post('/c={table}', [GenericEntityController::class, 'store']);
-// Route::put('/c={table}/{id}', [GenericEntityController::class, 'update']);
-// Route::delete('/c={table}/{id}', [GenericEntityController::class, 'destroy']);
 
 
    
