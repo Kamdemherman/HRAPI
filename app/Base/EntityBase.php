@@ -52,18 +52,6 @@ class EntityBase
             ->delete();
     }
 
-//     public function search(array $filters): Collection
-// {
-//     $query = DB::table($this->table);
-
-//     foreach ($filters as $field => $value) {
-//         if (Schema::hasColumn($this->table, $field)) {
-//             $query->where($field, $value);
-//         }
-//     }
-
-//     return $query->get();
-// }
 
 public function search(array $filters = [])
 {

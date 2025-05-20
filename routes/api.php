@@ -17,7 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
    });
 
-
+   Route::post('/test', 'TestController@store')->middleware('reject.empty.body');
    
     // Route::get('{table}', [GenericEntityController::class, 'index']);
     // Route::get('{table}/{id}', [GenericEntityController::class, 'show']);

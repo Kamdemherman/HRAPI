@@ -3,56 +3,54 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Http\JsonResponse;
 
 class SpecialFilterService
 {
-    public static function handle($table, array $query): JsonResponse|null
+    protected array $filters;
+
+    public function __construct()
     {
-        // Liste des filtres spéciaux autorisés
-        $specialParams = [
-            'emiters' => 'EMITER',
-            'roles'   => 'NAME',
-        ];
+        $this->filters = config('special_filters');
+    }
 
-        foreach ($query as $param => $value) {
-            // Si le paramètre est spécial
-            if (array_key_exists($param, $specialParams)) {
-                $column = $specialParams[$param];
+    public function has(string $table, string $key): bool
+    {
+        return isset($this->filters[$table][$key]);
+    }
 
-                // Vérifie si la colonne existe bien dans la table
-                if (!Schema::hasColumn($table, $column)) {
-                    return response()->json([
-                        'error' => "Le champ '$param' n'existe pas dans la table '$table'."
-                    ], 400);
-                }
-
-                // Rejette les requêtes avec une valeur ex: ?emiters=1
-                if (!is_null($value) && $value !== '') {
-                    return response()->json([
-                        'error' => "La requête '$param=$value' n'est pas autorisée. Utilisez simplement '?$param' sans valeur."
-                    ], 400);
-                }
-
-                // Retourne les valeurs distinctes
-                return response()->json(
-                    DB::table($table)
-                        ->select($column)
-                        ->distinct()
-                        ->whereNotNull($column)
-                        ->orderBy($column)
-                        ->get()
-                );
-            } else {
-                // Le paramètre n'est pas reconnu comme filtre spécial
-                return response()->json([
-                    'error' => "Le champ '$param' n'existe pas dans la table '$table'."
-                ], 400);
-            }
+    public function handle(string $table, string $key)
+    {
+        if (!$this->has($table, $key)) {
+            return DB::table($table)->get(); // fallback
         }
 
-        // Aucun filtre spécial détecté
-        return null;
+        $filter = $this->filters[$table][$key];
+        $column = $filter['column'];
+        $format = $filter['format'] ?? 'distinct_rows';
+        $targetTable = $filter['target_table'] ?? $table;
+        $primaryKey = $this->getPrimaryKey($targetTable);
+
+        $query = DB::table($targetTable)->whereNotNull($column);
+
+        switch ($format) {
+            case 'flat_unique':
+                return $query->orderBy($primaryKey)->pluck($column)->unique()->values();
+
+            case 'distinct_rows':
+                return $query->select($column)->distinct()->get();
+
+             case 'custom_select': 
+                $select = $filter['select'] ?? ['*'];
+                return $query->select($select)->get();       
+
+            default:
+                return $query->get(); 
+        }
+    }
+
+    protected function getPrimaryKey(string $table): string
+    {
+        $map = config('entity_keys');
+        return $map[$table] ?? 'id';
     }
 }
