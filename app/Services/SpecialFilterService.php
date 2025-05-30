@@ -6,51 +6,55 @@ use Illuminate\Support\Facades\DB;
 
 class SpecialFilterService
 {
-    protected array $filters;
-
-    public function __construct()
+    public function has(string $table, string $attribute): bool
     {
-        $this->filters = config('special_filters');
+        $filters = config("special_filters.$table");
+        return isset($filters[$attribute]);
     }
 
-    public function has(string $table, string $key): bool
+    public function handle(string $table, string $attribute)
     {
-        return isset($this->filters[$table][$key]);
-    }
+        $config = config("special_filters.$table.$attribute");
 
-    public function handle(string $table, string $key)
-    {
-        if (!$this->has($table, $key)) {
-            return DB::table($table)->get(); // fallback
+        if (!$config || !isset($config['column'])) {
+            throw new \InvalidArgumentException("Configuration invalide pour $table.$attribute");
         }
 
-        $filter = $this->filters[$table][$key];
-        $column = $filter['column'];
-        $format = $filter['format'] ?? 'distinct_rows';
-        $targetTable = $filter['target_table'] ?? $table;
-        $primaryKey = $this->getPrimaryKey($targetTable);
+        $column = $config['column'];
+        $format = $config['format'] ?? 'distinct_rows';
+        $targetTable = $config['target_table'] ?? $table;
 
-        $query = DB::table($targetTable)->whereNotNull($column);
-
-        switch ($format) {
-            case 'flat_unique':
-                return $query->orderBy($primaryKey)->pluck($column)->unique()->values();
-
-            case 'distinct_rows':
-                return $query->select($column)->distinct()->get();
-
-             case 'custom_select': 
-                $select = $filter['select'] ?? ['*'];
-                return $query->select($select)->get();       
-
-            default:
-                return $query->get(); 
+        if ($format === 'flat_unique') {
+            return DB::table($targetTable)
+                ->distinct()
+                ->pluck($column)
+                ->unique()
+                ->values();
         }
-    }
 
+        if ($format === 'distinct_rows') {
+            return DB::table($targetTable)
+                ->select($column)
+                ->distinct()
+                ->orderBy($column)
+                ->get();
+        }
+
+        if ($format === 'custom_select') {
+            $select = $config['select'] ?? [$column];
+            return DB::table($targetTable)
+                ->select($select)
+                ->distinct()
+                ->get();
+        }
+
+        throw new \InvalidArgumentException("Format '$format' non supporté.");
+    }
     protected function getPrimaryKey(string $table): string
     {
         $map = config('entity_keys');
         return $map[$table] ?? 'id';
     }
 }
+   
+

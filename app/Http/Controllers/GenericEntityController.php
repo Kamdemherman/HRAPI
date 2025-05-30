@@ -39,8 +39,6 @@ class GenericEntityController extends Controller
 {
     $this->init($request, $table, $idField);
 
-    // $queryKeys = array_keys($request->query());
-    // $specialKey = $queryKeys[0] ?? null;
     $specialKey = collect($request->query())->keys()->first();
 
     $filterService = new SpecialFilterService();

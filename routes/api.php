@@ -6,6 +6,11 @@ use App\Http\Controllers\GenericEntityController;
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\CustomApiController;
+use App\Http\Controllers\SpecialFilterController;
+
+use App\Http\Controllers\CustomAttendanceController;
+
 use App\Http\Middleware\CheckHttpMethod;
 
 // Routes d'authentification
@@ -17,14 +22,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
    });
 
-   Route::post('/test', 'TestController@store')->middleware('reject.empty.body');
-   
-    // Route::get('{table}', [GenericEntityController::class, 'index']);
-    // Route::get('{table}/{id}', [GenericEntityController::class, 'show']);
-    // Route::post('{table}', [GenericEntityController::class, 'store']);
-    // Route::put('{table}/{id}', [GenericEntityController::class, 'update']);
-    // Route::delete('{table}/{id}', [GenericEntityController::class, 'destroy']);
-
 
 Route::prefix('c')-> middleware([CheckHttpMethod::class])->group(function () {
     Route::get('{table}', [GenericEntityController::class, 'index']);
@@ -33,6 +30,17 @@ Route::prefix('c')-> middleware([CheckHttpMethod::class])->group(function () {
     Route::put('{table}/{id}', [GenericEntityController::class, 'update']);
     Route::delete('{table}/{id}', [GenericEntityController::class, 'destroy']);
 });
+
+Route::get('/c/{table}', [CustomApiController::class, 'index']);
+
+Route::get('/c/hirings', [CustomApiController::class, 'getHirings']);
+   
+
+Route::get('/attendance/quicklist', [CustomAttendanceController::class, 'quickList']);
+
+
+
+
 
 
 

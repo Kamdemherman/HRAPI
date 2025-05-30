@@ -6,5 +6,5 @@ return [
     'applicants'=> 'ID_APPLICANT',
     'interns'=> 'ID_INTERNS',
     'internships'=> 'ID_INTERNSHIP',
-    // Ajoute d'autres tables ici...
+     'offers' => 'ID_OFFER',
 ];
