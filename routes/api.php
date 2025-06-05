@@ -1,17 +1,13 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-
 use App\Http\Controllers\GenericEntityController;
-
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\CustomApiController;
 use App\Http\Controllers\SpecialFilterController;
-
 use App\Http\Controllers\CustomAttendanceController;
-
 use App\Http\Middleware\CheckHttpMethod;
+
 
 // Routes d'authentification
 Route::post('login', [AuthController::class, 'login']);
@@ -31,12 +27,6 @@ Route::prefix('c')-> middleware([CheckHttpMethod::class])->group(function () {
     Route::delete('{table}/{id}', [GenericEntityController::class, 'destroy']);
 });
 
-Route::get('/c/{table}', [CustomApiController::class, 'index']);
-
-Route::get('/c/hirings', [CustomApiController::class, 'getHirings']);
-   
-
-Route::get('/attendance/quicklist', [CustomAttendanceController::class, 'quickList']);
 
 
 

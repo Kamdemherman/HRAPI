@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 use App\Services\SpecialFilterService;
+use App\Services\CustomFactory;
+use App\Base\DBHelper;
 use Carbon\Carbon;
 
 class GenericEntityController extends Controller
@@ -35,21 +37,20 @@ class GenericEntityController extends Controller
 
   
 
-    public function index(Request $request, $table, $idField = 'id')
-{
-    $this->init($request, $table, $idField);
-
-    $specialKey = collect($request->query())->keys()->first();
-
-    $filterService = new SpecialFilterService();
-
-    if ($specialKey && $filterService->has($table, $specialKey)) {
-        return response()->json($filterService->handle($table, $specialKey));
-    }
-
-    return response()->json($this->entity->search($request->query()));
-}
-
+    public function index($table, Request $request)
+    {
+        $dbHelper = new DBHelper();
+        $factory = new CustomFactory();
+        $result = $factory->handle($table, $request, $dbHelper);
+    
+        if ($result !== null) {
+            return response()->json($result);
+        }
+    
+        return response()->json($dbHelper->getList($table));
+    
+        }
+    
     public function store(Request $request, $table)
     {
         $primaryKey = $this->getPrimaryKey($table);
